@@ -7,11 +7,22 @@ const api = axios.create({
     },
 });
 
+
 export async function analyzeApi(requestData) {
     try {
         const response = await api.post("/api/full-analysis", requestData);
         return { success: true, data: response.data };
 
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+// Load test
+export async function runLoadTest(requestData) {
+    try {
+        const response = await api.post("/api/load-test", requestData);
+        return { success: true, data: response.data };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -56,4 +67,5 @@ export async function compareHistory(id1, id2) {
     } catch (error) {
         return { success: false, error: error.message };
     }
+
 }

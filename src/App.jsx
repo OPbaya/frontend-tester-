@@ -93,6 +93,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import History from "./pages/History";
 import Compare from "./pages/Compare";
+import LoadTest from "./pages/LoadTest";
 
 function App() {
   return (
@@ -104,6 +105,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/history" element={<History />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/load-test" element={<LoadTest />} />
           </Routes>
         </div>
       </div>
