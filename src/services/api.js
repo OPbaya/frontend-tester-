@@ -28,6 +28,26 @@ export async function runLoadTest(requestData) {
     }
 }
 
+// Get all load test history
+export async function getLoadTestHistory() {
+    try {
+        const response = await api.get("/api/load-test/history");
+        return { success: true, data: response.data };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+// Delete a load test history entry
+export async function deleteLoadTestHistory(id) {
+    try {
+        await api.delete(`/api/load-test/history/${id}`);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
 // Get all history
 export async function getAllHistory() {
     try {
