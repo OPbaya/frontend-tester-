@@ -10,6 +10,8 @@ function History() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const [selectedEntry, setSelectedEntry] = useState(null);
+
   // Load all history on page load
   useEffect(() => {
     fetchHistory();
@@ -157,7 +159,8 @@ function History() {
         {history.map((entry) => (
           <div
             key={entry.id}
-            className={`bg-gray-900 border rounded-xl p-5 transition-colors ${
+            onClick={() => setSelectedEntry(entry)}
+            className={`bg-gray-900 border rounded-xl p-5 transition-colors cursor-pointer hover:border-gray-600 ${
               selected.includes(entry.id)
                 ? "border-purple-600"
                 : "border-gray-800"
@@ -170,6 +173,7 @@ function History() {
                   type="checkbox"
                   checked={selected.includes(entry.id)}
                   onChange={() => handleSelect(entry.id)}
+                  onClick={(e) => e.stopPropagation()}
                   disabled={
                     !selected.includes(entry.id) && selected.length >= 2
                   }
@@ -210,11 +214,168 @@ function History() {
 
               {/* Delete button */}
               <button
-                onClick={() => handleDelete(entry.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(entry.id);
+                }}
                 className="text-red-400 hover:text-red-300 text-sm px-3 py-1 rounded-lg hover:bg-red-900/20 transition-colors shrink-0"
               >
                 Delete
               </button>
+
+              {/* click on this to view details */}
+              {/* Full Analysis Modal */}
+              {selectedEntry && (
+                <div
+                  className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4"
+                  onClick={() => setSelectedEntry(null)}
+                >
+                  <div
+                    className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 space-y-6"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">
+                          Full Analysis
+                        </h3>
+                        <p className="text-gray-400 text-xs mt-1">
+                          {formatDate(selectedEntry.testedAt)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedEntry(null)}
+                        className="text-gray-400 hover:text-white text-xl px-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* URL and Method */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded border ${getMethodColor(selectedEntry.method)}`}
+                      >
+                        {selectedEntry.method}
+                      </span>
+                      <span className="text-white text-sm break-all">
+                        {selectedEntry.url}
+                      </span>
+                    </div>
+
+                    {/* Overall Status */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-400 text-sm">
+                        Overall Status:
+                      </span>
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                          selectedEntry.report.overallStatus === "GOOD"
+                            ? "text-green-400 bg-green-900/30 border-green-800"
+                            : "text-red-400 bg-red-900/30 border-red-800"
+                        }`}
+                      >
+                        {selectedEntry.report.overallStatus === "GOOD"
+                          ? "✅ GOOD"
+                          : "⚠️ ISSUE"}
+                      </span>
+                    </div>
+
+                    {/* Summary */}
+                    <div>
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">
+                        Summary
+                      </p>
+                      <p className="text-gray-300 text-sm">
+                        {selectedEntry.report.summary}
+                      </p>
+                    </div>
+
+                    {/* Test Results Table */}
+                    <div>
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-3">
+                        Test Results
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-gray-400 text-xs border-b border-gray-800">
+                              <th className="text-left py-2 pr-4">Test</th>
+                              <th className="text-left py-2 pr-4">Status</th>
+                              <th className="text-left py-2 pr-4">Success</th>
+                              <th className="text-left py-2">Response Time</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800">
+                            {selectedEntry.report.results.map(
+                              (result, index) => (
+                                <tr key={index}>
+                                  <td className="py-2 pr-4 text-white">
+                                    {result.testName}
+                                  </td>
+                                  <td
+                                    className={`py-2 pr-4 font-semibold ${
+                                      result.status >= 200 &&
+                                      result.status < 300
+                                        ? "text-green-400"
+                                        : result.status >= 400 &&
+                                            result.status < 500
+                                          ? "text-yellow-400"
+                                          : "text-red-400"
+                                    }`}
+                                  >
+                                    {result.status}
+                                  </td>
+                                  <td className="py-2 pr-4">
+                                    {result.success ? (
+                                      <span className="text-green-400">
+                                        ✅ Yes
+                                      </span>
+                                    ) : (
+                                      <span className="text-red-400">
+                                        ❌ No
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-2 text-gray-300">
+                                    {result.responseTime}ms
+                                  </td>
+                                </tr>
+                              ),
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Suggestions */}
+                    <div>
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-3">
+                        Suggestions
+                      </p>
+                      {selectedEntry.report.suggestions &&
+                      selectedEntry.report.suggestions.length > 0 ? (
+                        <ul className="space-y-2">
+                          {selectedEntry.report.suggestions.map((s, i) => (
+                            <li
+                              key={i}
+                              className="text-sm text-yellow-300 bg-yellow-900/20 border border-yellow-800/50 px-4 py-2 rounded-lg"
+                            >
+                              💡 {s}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-green-400 text-sm">
+                          No suggestions. API looks good!
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* end of click to view details */}
             </div>
           </div>
         ))}
